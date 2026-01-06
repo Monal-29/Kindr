@@ -1,3 +1,4 @@
+
 # Kindr - Help & Donate Platform
 
 A full-stack web application that connects people who need help with those who want to donate. Features include user authentication, help request creation, Tinder-like swipe interface, and admin verification system.
@@ -186,3 +187,6 @@ To run both servers simultaneously:
 ## License
 
 This project is open source and available for educational purposes.
+
+# Kindr
+
