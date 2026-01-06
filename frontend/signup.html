@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Kindr</title>
+    <link rel="stylesheet" href="css/auth-styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <h1>Sign Up for Kindr</h1>
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        
+        <form id="signup-form" onsubmit="handleSignup(event)">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required minlength="6">
+            </div>
+            
+            <div class="form-group">
+                <label for="userType">I want to:</label>
+                <select id="userType" name="userType" required>
+                    <option value="recipient">Seek Help</option>
+                    <option value="donor">Donate/Help Others</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn-primary">Sign Up</button>
+        </form>
+        
+        <p class="auth-links">
+            Already have an account? <a href="login.html">Login</a>
+        </p>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        // Test backend connection on page load
+        window.addEventListener('DOMContentLoaded', async function() {
+            const isConnected = await API_CONFIG.testConnection();
+            if (!isConnected) {
+                const errorDiv = document.getElementById('error-message');
+                if (errorDiv) {
+                    errorDiv.textContent = '⚠️ Backend server is not running. Please start the backend server on http://localhost:5000';
+                    errorDiv.style.display = 'block';
+                    errorDiv.style.background = '#fff3cd';
+                    errorDiv.style.color = '#856404';
+                    errorDiv.style.borderLeftColor = '#ffc107';
+                }
+            }
+        });
+        
+        async function handleSignup(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const userType = document.getElementById('userType').value;
+            
+            // Check backend connection first
+            const isConnected = await API_CONFIG.testConnection();
+            if (!isConnected) {
+                const errorDiv = document.getElementById('error-message');
+                if (errorDiv) {
+                    errorDiv.textContent = 'Cannot connect to backend server. Please make sure the backend is running on http://localhost:5000';
+                    errorDiv.style.display = 'block';
+                }
+                return;
+            }
+            
+            try {
+                // Show loading state
+                const submitBtn = event.target.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                submitBtn.textContent = 'Signing up...';
+                submitBtn.disabled = true;
+                
+                const response = await apiCall(API_CONFIG.ENDPOINTS.AUTH.REGISTER, 'POST', {
+                    name,
+                    email,
+                    password,
+                    userType
+                });
+                
+                alert('Registration successful! Please login.');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Signup failed:', error);
+                const errorDiv = document.getElementById('error-message');
+                if (errorDiv) {
+                    let errorMsg = error.message || 'Signup failed. Please try again.';
+                    
+                    // Provide helpful error messages
+                    if (errorMsg.includes('Cannot connect to server')) {
+                        errorMsg = 'Cannot connect to backend server. Please make sure the backend is running on http://localhost:5000';
+                    } else if (errorMsg.includes('Email already registered')) {
+                        errorMsg = 'This email is already registered. Please use a different email or login.';
+                    }
+                    
+                    errorDiv.textContent = errorMsg;
+                    errorDiv.style.display = 'block';
+                }
+                
+                // Re-enable button
+                const submitBtn = event.target.querySelector('button[type="submit"]');
+                submitBtn.textContent = 'Sign Up';
+                submitBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
+

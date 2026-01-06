@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipient Dashboard - Kindr</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="auth-styles.css">
+    <style>
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .create-request-btn {
+            background-color: #ff4b6e;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .create-request-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 75, 110, 0.2);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .stat-card h3 {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff4b6e;
+        }
+        .requests-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .requests-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        .request-card {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 1rem;
+            transition: transform 0.2s;
+        }
+        .request-card:hover {
+            transform: translateY(-2px);
+        }
+        .request-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        .status-pending {
+            background-color: #fff8e8;
+            color: #ffb84b;
+        }
+        .status-active {
+            background-color: #e8fff0;
+            color: #4bff91;
+        }
+        .status-completed {
+            background-color: #e8eeff;
+            color: #4b91ff;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .modal-buttons button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .cancel-btn {
+            background-color: #eee;
+            color: #666;
+        }
+        .submit-btn {
+            background-color: #ff4b6e;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Kindr</div>
+        <div class="nav-links">
+            <a href="/recipient-dashboard.html" class="nav-link active">Dashboard</a>
+            <button id="logoutBtn" class="nav-link">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h1>Recipient Dashboard</h1>
+            <button class="create-request-btn" id="createRequestBtn">Create New Request</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Active Requests</h3>
+                <div class="number">2</div>
+            </div>
+            <div class="stat-card">
+                <h3>Completed Requests</h3>
+                <div class="number">5</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Donations Received</h3>
+                <div class="number">7</div>
+            </div>
+        </div>
+
+        <div class="requests-section">
+            <h2>Your Active Requests</h2>
+            <div class="requests-grid" id="activeRequests">
+                <!-- Active requests will be populated here -->
+            </div>
+        </div>
+
+        <div class="requests-section" style="margin-top: 2rem;">
+            <h2>Request History</h2>
+            <div class="requests-grid" id="requestHistory">
+                <!-- Request history will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Request Modal -->
+    <div class="modal" id="createRequestModal">
+        <div class="modal-content">
+            <h2>Create New Request</h2>
+            <form id="requestForm">
+                <div class="form-group">
+                    <label for="requestTitle">Request Title</label>
+                    <input type="text" id="requestTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="requestDescription">Description</label>
+                    <textarea id="requestDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="requestAmount">Amount Needed</label>
+                    <input type="number" id="requestAmount" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="cancel-btn" id="cancelRequestBtn">Cancel</button>
+                    <button type="submit" class="submit-btn">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication
+        const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+        if (!auth.isAuthenticated || auth.user?.role !== 'recipient') {
+            window.location.href = '/login.html';
+        }
+
+        // Modal functionality
+        const modal = document.getElementById('createRequestModal');
+        const createRequestBtn = document.getElementById('createRequestBtn');
+        const cancelRequestBtn = document.getElementById('cancelRequestBtn');
+        const requestForm = document.getElementById('requestForm');
+
+        createRequestBtn.addEventListener('click', () => {
+            modal.classList.add('active');
+        });
+
+        cancelRequestBtn.addEventListener('click', () => {
+            modal.classList.remove('active');
+            requestForm.reset();
+        });
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+                requestForm.reset();
+            }
+        });
+
+        // Form submission
+        requestForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newRequest = {
+                title: document.getElementById('requestTitle').value,
+                description: document.getElementById('requestDescription').value,
+                amount: document.getElementById('requestAmount').value,
+                status: 'pending',
+                date: new Date().toISOString().split('T')[0]
+            };
+            // Add to active requests (in real app, this would be an API call)
+            activeRequests.unshift(newRequest);
+            renderRequests(activeRequests, 'activeRequests');
+            modal.classList.remove('active');
+            requestForm.reset();
+        });
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('auth');
+            window.location.href = '/';
+        });
+
+        // Sample data - Replace with actual API calls
+        const activeRequests = [
+            {
+                title: "Emergency Medical Assistance",
+                description: "Need help with medical bills",
+                amount: 500,
+                status: "active",
+                date: "2024-05-20"
+            },
+            {
+                title: "School Supplies",
+                description: "Need supplies for the new school year",
+                amount: 200,
+                status: "pending",
+                date: "2024-05-19"
+            }
+        ];
+
+        const requestHistory = [
+            {
+                title: "Rent Assistance",
+                description: "Help with monthly rent",
+                amount: 800,
+                status: "completed",
+                date: "2024-05-10"
+            },
+            {
+                title: "Grocery Assistance",
+                description: "Help with monthly groceries",
+                amount: 150,
+                status: "completed",
+                date: "2024-05-05"
+            }
+        ];
+
+        // Render requests
+        function renderRequests(requests, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = requests.map(request => `
+                <div class="request-card">
+                    <span class="request-status status-${request.status}">
+                        ${request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                    </span>
+                    <h3>${request.title}</h3>
+                    <p>${request.description}</p>
+                    <p>Amount: $${request.amount}</p>
+                    <p>Date: ${request.date}</p>
+                </div>
+            `).join('');
+        }
+
+        renderRequests(activeRequests, 'activeRequests');
+        renderRequests(requestHistory, 'requestHistory');
+    </script>
+</body>
+</html> 

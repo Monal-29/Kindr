@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matches - Kindr</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .donation-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .donation-card h2 {
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .donation-card p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .qr-wrapper {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 0 auto;
+            display: inline-block;
+            border: 2px dashed #ddd;
+        }
+
+        .qr-wrapper img {
+            display: block;
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+        }
+
+        .scan-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 0 auto;
+        }
+
+        .scan-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .qr-code-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #eee;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>Your Matches</h1>
+            <nav>
+                <a href="donor-dashboard.html">Dashboard</a>
+                <a href="swipe.html">Swipe</a>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </nav>
+        </header>
+
+        <main>
+            <section class="dashboard-content">
+                <div id="matches-container">
+                    <!-- Matches will be loaded here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Donation Modal -->
+    <div id="donationModal" class="modal-overlay" onclick="closeDonationModal(event)">
+        <div class="donation-card">
+            <button class="close-btn" onclick="closeDonationModal(event)">&times;</button>
+            <div class="donation-content" id="modalContent">
+                <!-- Content injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const token = checkAuth();
+            if (!token) return;
+            loadMatches();
+        });
+
+        async function loadMatches() {
+            try {
+                const matches = await apiCall(API_CONFIG.ENDPOINTS.SWIPES.GET_MATCHES);
+                const container = document.getElementById('matches-container');
+
+                if (matches.length === 0) {
+                    container.innerHTML = '<p>No matches yet. Start swiping to find help requests!</p>';
+                    return;
+                }
+
+                container.innerHTML = matches.map(match => `
+                    <div class="match-card">
+                        <h3>${match.title}</h3>
+                        <p>${match.description}</p>
+                        <div class="match-details">
+                            <p><strong>Status:</strong> <span class="status status-${match.status}">${match.status}</span></p>
+                            <p><strong>Category:</strong> ${match.category}</p>
+                            ${match.location ? `<p><strong>Location:</strong> ${match.location}</p>` : ''}
+                            ${match.recipient_name ? `<p><strong>Recipient:</strong> ${match.recipient_name}</p>` : ''}
+                            ${match.donor_name ? `<p><strong>Donor:</strong> ${match.donor_name}</p>` : ''}
+                        </div>
+                        ${match.qr_code_path ? `
+                            <div class="qr-code-section">
+                                <button onclick="openDonateModal('${match.qr_code_path}', '${match.recipient_name}', '${match.title}')" class="scan-btn">
+                                    <span>📱</span> Scan to Donate
+                                </button>
+                            </div>
+                        ` : ''}
+                        <small>Matched: ${new Date(match.created_at).toLocaleDateString()}</small>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load matches:', error);
+            }
+        }
+
+        function openDonateModal(qrPath, recipientName, title) {
+            const modal = document.getElementById('donationModal');
+            const content = document.getElementById('modalContent');
+            const filename = qrPath.split('/').pop();
+
+            content.innerHTML = `
+                <h2>Scan to Donate</h2>
+                <div class="recipient-info">
+                    <p>To: <strong>${recipientName}</strong></p>
+                    <small>For: ${title}</small>
+                </div>
+                <div class="qr-wrapper">
+                    <img src="${API_CONFIG.BASE_URL}/help-requests/image/${filename}" alt="Payment QR Code">
+                </div>
+                <p style="margin-top: 1rem; font-size: 0.9em;">Use your payment app to scan this code</p>
+            `;
+
+            modal.style.display = 'flex';
+        }
+
+        function closeDonationModal(event) {
+            if (event.target === document.getElementById('donationModal') || event.target.className === 'close-btn' || event.target.textContent === '×') {
+                document.getElementById('donationModal').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donor Dashboard - Kindr</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>Donor Dashboard</h1>
+            <button onclick="logout()" class="btn-logout">Logout</button>
+        </header>
+
+        <main>
+            <section class="dashboard-content">
+                <div class="dashboard-actions">
+                    <a href="swipe.html" class="btn-primary">Start Swiping</a>
+                    <a href="matches.html" class="btn-secondary">View Matches</a>
+                </div>
+
+                <h2>Your Matches</h2>
+                <div id="matches-container">
+                    <!-- Matches will be loaded here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Include the API configuration -->
+    <script src="js/config.js"></script>
+    <!-- Include the authentication handlers -->
+    <script src="js/auth.js"></script>
+    <script>
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', async function () {
+            const token = checkAuth();
+            if (!token) return; // checkAuth will redirect if no token
+
+            // Verify user is a donor
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.userType !== 'donor') {
+                alert('Donor access required');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Load matches and available requests info
+            await loadMatches();
+            await loadAvailableRequestsInfo();
+        });
+
+        async function loadAvailableRequestsInfo() {
+            try {
+                const requests = await apiCall(API_CONFIG.ENDPOINTS.HELP_REQUESTS.GET_VERIFIED);
+                const matchesContainer = document.getElementById('matches-container');
+
+                // Add info about available requests
+                if (requests && requests.length > 0) {
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'info-card';
+                    infoDiv.style.cssText = 'background: #e3f2fd; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;';
+                    infoDiv.innerHTML = `
+                        <p><strong>${requests.length} verified request${requests.length > 1 ? 's' : ''} available</strong> - <a href="swipe.html">Start Swiping</a> to help!</p>
+                    `;
+                    matchesContainer.insertBefore(infoDiv, matchesContainer.firstChild);
+                }
+            } catch (error) {
+                console.error('Failed to load available requests info:', error);
+            }
+        }
+
+        async function loadMatches() {
+            try {
+                const matches = await apiCall(API_CONFIG.ENDPOINTS.SWIPES.GET_MATCHES);
+                const container = document.getElementById('matches-container');
+
+                if (matches.length === 0) {
+                    container.innerHTML = '<p>No matches yet. Start swiping to help others!</p>';
+                    return;
+                }
+
+                container.innerHTML = matches.map(match => `
+                    <div class="match-card">
+                        <h3>${match.title}</h3>
+                        <p>${match.description}</p>
+                        <div class="match-details">
+                            <span class="status status-${match.status}">${match.status}</span>
+                            <span class="category">${match.category}</span>
+                            ${match.qr_code_path ? `<span class="badge" style="background:#e8f5e9; color:#2e7d32; font-size: 0.8em; padding: 2px 6px; border-radius: 4px;">QR Code Available</span>` : ''}
+                        </div>
+                        <small>Matched: ${new Date(match.created_at).toLocaleDateString()}</small>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load matches:', error);
+            }
+        }
+    </script>
+</body>
+
+</html>

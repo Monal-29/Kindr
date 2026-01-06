@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Test - Kindr</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Backend Connection Test</h1>
+    <p>This page will test if the backend server is accessible from your browser.</p>
+    
+    <button onclick="testConnection()">Test Backend Connection</button>
+    <button onclick="testLogin()">Test Login Endpoint</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testConnection() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                console.log('Testing: http://localhost:5000/api/health');
+                const response = await fetch('http://localhost:5000/api/health', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+                
+                const data = await response.json();
+                
+                resultsDiv.innerHTML = `
+                    <div class="test-result success">
+                        <h3>✅ Connection Successful!</h3>
+                        <p>Status: ${response.status}</p>
+                        <p>Response: <pre>${JSON.stringify(data, null, 2)}</pre></p>
+                        <p>CORS Headers:</p>
+                        <pre>${[...response.headers.entries()].map(([k, v]) => `${k}: ${v}`).join('\n')}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Connection test failed:', error);
+                resultsDiv.innerHTML = `
+                    <div class="test-result error">
+                        <h3>❌ Connection Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Error Type:</strong> ${error.name}</p>
+                        <p><strong>Stack:</strong></p>
+                        <pre>${error.stack}</pre>
+                        <h4>Possible Causes:</h4>
+                        <ul>
+                            <li>Backend server is not running (check: http://localhost:5000/api/health)</li>
+                            <li>Firewall is blocking port 5000</li>
+                            <li>Browser is blocking the connection</li>
+                            <li>CORS issue (check console for CORS errors)</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+        
+        async function testLogin() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Testing login endpoint...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@kindr.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-result success">
+                            <h3>✅ Login Endpoint Working!</h3>
+                            <p>Status: ${response.status}</p>
+                            <p>Response (token hidden):</p>
+                            <pre>${JSON.stringify({...data, access_token: data.access_token ? '***HIDDEN***' : 'N/A'}, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test-result error">
+                            <h3>⚠️ Login Endpoint Responded with Error</h3>
+                            <p>Status: ${response.status}</p>
+                            <p>Response: <pre>${JSON.stringify(data, null, 2)}</pre></p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Login test failed:', error);
+                resultsDiv.innerHTML = `
+                    <div class="test-result error">
+                        <h3>❌ Login Test Failed</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Auto-test on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded. Current URL:', window.location.href);
+            console.log('Protocol:', window.location.protocol);
+            if (window.location.protocol === 'file:') {
+                document.getElementById('results').innerHTML = `
+                    <div class="test-result error">
+                        <h3>⚠️ Warning: Using file:// protocol</h3>
+                        <p>You're accessing this page via file:// which may cause CORS issues.</p>
+                        <p>Please access via: <strong>http://localhost:8000/test-connection.html</strong></p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
+

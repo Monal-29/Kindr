@@ -1,0 +1,347 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #1e1e2f 0%, #2d2d44 100%);
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Prevent scrolling while swiping */
+}
+
+/* Header Styling */
+header {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+header h1 {
+    font-size: 1.5rem;
+    color: white;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+header nav {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+header nav a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+header nav a:hover {
+    color: white;
+}
+
+.btn-logout {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.btn-logout:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+/* Swipe Container */
+.swipe-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-top: 80px;
+    /* Space for header */
+    position: relative;
+}
+
+.cards-container {
+    position: relative;
+    width: 90%;
+    height: 60vh;
+    max-height: 600px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    perspective: 1000px;
+}
+
+/* Card Styling */
+.card {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    cursor: grab;
+    user-select: none;
+    will-change: transform;
+    overflow: hidden;
+    /* Smooth transition for resetting position */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:active {
+    cursor: grabbing;
+}
+
+.card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    /* Let drag events pass through content */
+}
+
+/* Card Header Badge */
+.card-header-badge {
+    align-self: flex-start;
+    background: #f0f4ff;
+    color: #4a6bff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.card h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #1a1a2e;
+    line-height: 1.2;
+}
+
+.card-description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #555;
+    margin: 1rem 0;
+    flex-grow: 1;
+    overflow-y: auto;
+    /* Custom scrollbar for description */
+    scrollbar-width: thin;
+    scrollbar-color: #ddd transparent;
+}
+
+.card-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+}
+
+/* Badges */
+.badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.badge.urgency-urgent {
+    background: #ffebee;
+    color: #d32f2f;
+    border: 1px solid rgba(211, 47, 47, 0.1);
+}
+
+.badge.urgency-high {
+    background: #fff3e0;
+    color: #ef6c00;
+    border: 1px solid rgba(239, 108, 0, 0.1);
+}
+
+.badge.urgency-medium {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.badge.location {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+/* Card Footer (User Info) */
+.card-footer {
+    margin-top: 20px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.user-info span {
+    font-weight: 600;
+    color: #333;
+}
+
+/* No Cards State */
+.no-cards {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.9);
+    padding: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: 90%;
+    max-width: 400px;
+    z-index: 50;
+}
+
+.no-cards p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+/* Swipe Controls */
+.swipe-buttons {
+    display: flex;
+    gap: 40px;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    z-index: 10;
+}
+
+.btn-control {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 2rem;
+    background: white;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-control:hover {
+    transform: scale(1.15);
+}
+
+.btn-control:active {
+    transform: scale(0.95);
+}
+
+.btn-pass {
+    color: #ff5252;
+}
+
+.btn-pass:hover {
+    background: #ff5252;
+    color: white;
+    box-shadow: 0 15px 30px rgba(255, 82, 82, 0.4);
+}
+
+.btn-like {
+    color: #4caf50;
+    font-size: 2.2rem;
+    /* Slightly larger heart */
+}
+
+.btn-like:hover {
+    background: #4caf50;
+    color: white;
+    box-shadow: 0 15px 30px rgba(76, 175, 80, 0.4);
+}
+
+.btn-refresh {
+    color: #2196f3;
+    font-size: 1.8rem;
+    width: 50px;
+    /* Smaller refresh button */
+    height: 50px;
+}
+
+.btn-refresh:hover {
+    background: #2196f3;
+    color: white;
+    box-shadow: 0 10px 20px rgba(33, 150, 243, 0.4);
+    transform: rotate(180deg);
+}
+
+/* Adjustments for mobile */
+@media (max-width: 600px) {
+    .cards-container {
+        width: 95%;
+        height: 55vh;
+    }
+
+    .card h2 {
+        font-size: 1.5rem;
+    }
+
+    .swipe-buttons {
+        gap: 20px;
+    }
+
+    .btn-control {
+        width: 60px;
+        height: 60px;
+    }
+}

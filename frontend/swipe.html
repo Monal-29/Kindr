@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swipe - Kindr</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/swipe-styles.css">
+</head>
+
+<body>
+    <div class="swipe-container">
+        <header>
+            <h1>Kindr</h1>
+            <nav>
+                <a href="donor-dashboard.html">Dashboard</a>
+                <a href="matches.html">Matches</a>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </nav>
+        </header>
+
+        <div class="cards-container" id="cards-container">
+            <!-- Cards will be injected here -->
+        </div>
+
+        <div class="no-cards" id="no-cards" style="display: none;">
+            <p>No more help requests available. Check back later!</p>
+            <button onclick="refreshCards()" class="btn-control btn-refresh" title="Refresh">↻</button>
+        </div>
+
+        <div class="swipe-buttons">
+            <button class="btn-control btn-pass" onclick="swipeLeft()" title="Pass">✕</button>
+            <div style="flex-grow: 1;"></div> <!-- Spacer -->
+            <button class="btn-control btn-refresh" onclick="refreshCards()" title="Refresh">↻</button>
+            <div style="flex-grow: 1;"></div> <!-- Spacer -->
+            <button class="btn-control btn-like" onclick="swipeRight()" title="Help">♥</button>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/swipe.js"></script>
+</body>
+
+</html>

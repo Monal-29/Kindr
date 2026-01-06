@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Debug Connection</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .log { margin: 10px 0; padding: 10px; background: #f0f0f0; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>Connection Debug Tool</h1>
+    <button onclick="runTests()">Run All Tests</button>
+    <div id="output"></div>
+
+    <script>
+        function log(msg, type = 'log') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            document.getElementById('output').appendChild(div);
+            console.log(msg);
+        }
+
+        async function runTests() {
+            document.getElementById('output').innerHTML = '';
+            log('Starting connection tests...', 'log');
+            
+            // Test 1: Basic fetch
+            log('Test 1: Basic fetch to health endpoint', 'log');
+            try {
+                const res = await fetch('http://localhost:5000/api/health');
+                const data = await res.json();
+                log(`✅ Health check passed: ${JSON.stringify(data)}`, 'success');
+            } catch (e) {
+                log(`❌ Health check failed: ${e.name} - ${e.message}`, 'error');
+            }
+            
+            // Test 2: Fetch with headers
+            log('Test 2: Fetch with JSON headers', 'log');
+            try {
+                const res = await fetch('http://localhost:5000/api/health', {
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                log(`✅ Fetch with headers passed: ${JSON.stringify(data)}`, 'success');
+            } catch (e) {
+                log(`❌ Fetch with headers failed: ${e.name} - ${e.message}`, 'error');
+            }
+            
+            // Test 3: POST request
+            log('Test 3: POST request to login endpoint', 'log');
+            try {
+                const res = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'test@test.com', password: 'test' })
+                });
+                const data = await res.json();
+                log(`✅ POST request passed (status ${res.status}): ${JSON.stringify(data)}`, res.ok ? 'success' : 'error');
+            } catch (e) {
+                log(`❌ POST request failed: ${e.name} - ${e.message}`, 'error');
+            }
+            
+            // Test 4: Check if we're on HTTP
+            log(`Test 4: Current protocol: ${window.location.protocol}`, window.location.protocol === 'http:' ? 'success' : 'error');
+            if (window.location.protocol === 'file:') {
+                log('⚠️ WARNING: Using file:// protocol. This will cause CORS issues!', 'error');
+            }
+            
+            log('Tests completed. Check results above.', 'log');
+        }
+        
+        // Auto-run on load
+        window.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>
+
